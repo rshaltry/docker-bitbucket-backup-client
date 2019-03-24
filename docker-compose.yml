@@ -1,0 +1,33 @@
+version: '3.4'
+
+services:
+  database:
+    image: postgres:9.4
+    restart: always
+    volumes:
+      - bitbucket-db:/var/lib/postgresql/data
+    env_file:
+      - "env.bitbucket"
+  bitbucket:
+    image: atlassian/bitbucket-server
+    restart: always
+    container_name: bitbucket
+    ports:
+      - 7990:7990
+      - 7999:7999
+    volumes:
+      - bitbucket:/var/atlassian/application-data/bitbucket
+      - /backup/bitbucket:/backup
+  bitbucket-backup:
+    build: bitbucket-backup
+    container_name: bitbucket-backup
+    volumes:
+      - bitbucket:/source
+      - /backup/bitbucket:/root/bitbucket-backup-client-3.5.0/backups
+    env_file:
+      - "env.bitbucket-backup"
+    entrypoint: ["java", "-jar", "/root/bitbucket-backup-client-3.5.0/bitbucket-backup-client.jar"]
+
+volumes:
+  bitbucket:
+  bitbucket-db:
